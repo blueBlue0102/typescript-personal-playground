@@ -1,3 +1,5 @@
+// await 並不是直接 await，而是還是會進入 function 裡面
+
 async function fun1(n) {
   console.log(`fun1: ${n}`);
   await fun2('fun1');
