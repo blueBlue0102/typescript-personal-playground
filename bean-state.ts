@@ -34,6 +34,8 @@ const Events = {
   AbortAnalysisSuccess: '終止跑分成功',
   AbortAnalysisTimeout: '終止跑分 timeout',
   ContinueAnalysis: '繼續跑分',
+  UpdateUploadingInfo: '更新上傳進度',
+  UpdateAnalyzingInfo: '更新跑分進度',
 };
 
 const beanAppMachine = createMachine({
@@ -49,6 +51,9 @@ const beanAppMachine = createMachine({
     },
     [States.Uploading.Running]: {
       on: {
+        [Events.UpdateUploadingInfo]: {
+          target: States.Uploading.Running,
+        },
         [Events.UploadSuccess]: {
           target: States.Uploading.Success,
         },
@@ -82,6 +87,9 @@ const beanAppMachine = createMachine({
     },
     [States.Analyzing.Running]: {
       on: {
+        [Events.UpdateAnalyzingInfo]: {
+          target: States.Analyzing.Running,
+        },
         [Events.PauseAnalysis]: {
           target: States.Analyzing.Pausing,
         },
