@@ -1,4 +1,4 @@
-import { createMachine } from 'xstate';
+import { createMachine, interpret } from 'xstate';
 
 const States = {
   None: '無',
@@ -33,10 +33,21 @@ const Events = {
   AbortAnalysis: '終止跑分',
   AbortAnalysisSuccess: '終止跑分成功',
   AbortAnalysisTimeout: '終止跑分 timeout',
-  ContinueAnalysis: '繼續跑分',
+  ContinueAnalysis: '繼續跑分 [尚待跑分的語料數量 > 0]',
+  ContinueAnalysisButAlreadyFinish: '繼續跑分 [尚待跑分的語料數量 = 0]',
   UpdateUploadingInfo: '更新上傳進度',
   UpdateAnalyzingInfo: '更新跑分進度',
 };
+
+function sleep() {
+  return new Promise((resolve) => {
+    console.log('start sleep');
+    setTimeout(() => {
+      resolve(true);
+      console.log('end sleep');
+    }, 5000);
+  });
+}
 
 const beanAppMachine = createMachine({
   id: 'BEAN app',
@@ -48,20 +59,44 @@ const beanAppMachine = createMachine({
           target: States.Uploading.Running,
         },
       },
+      // invoke: {
+      //   id: Events.Upload,
+      //   src: (context, event) => sleep(),
+      //   onDone: {
+      //     target: States.Uploading.Running,
+      //     actions: () => console.log('onDone'),
+      //   },
+      //   onError: {
+      //     target: States.None,
+      //     actions: () => console.log('onError'),
+      //   },
+      // },
     },
     [States.Uploading.Running]: {
-      on: {
-        [Events.UpdateUploadingInfo]: {
-          target: States.Uploading.Running,
-        },
-        [Events.UploadSuccess]: {
+      // on: {
+      //   [Events.UpdateUploadingInfo]: {
+      //     target: States.Uploading.Running,
+      //   },
+      //   [Events.UploadSuccess]: {
+      //     target: States.Uploading.Success,
+      //   },
+      //   [Events.UploadFailure]: {
+      //     target: States.Uploading.Failure,
+      //   },
+      //   [Events.UploadTimeout]: {
+      //     target: States.Uploading.Failure,
+      //   },
+      // },
+      invoke: {
+        id: Events.Upload,
+        src: (context, event) => sleep(),
+        onDone: {
           target: States.Uploading.Success,
+          actions: () => console.log('onDone: 上傳語料成功'),
         },
-        [Events.UploadFailure]: {
+        onError: {
           target: States.Uploading.Failure,
-        },
-        [Events.UploadTimeout]: {
-          target: States.Uploading.Failure,
+          actions: () => console.log('onError: 上傳語料失敗'),
         },
       },
     },
@@ -149,6 +184,9 @@ const beanAppMachine = createMachine({
         [Events.ContinueAnalysis]: {
           target: States.Analyzing.Running,
         },
+        [Events.ContinueAnalysisButAlreadyFinish]: {
+          target: States.Analyzing.Success,
+        },
         [Events.AbortAnalysis]: {
           target: States.Analyzing.Aborted,
         },
@@ -165,4 +203,35 @@ const beanAppMachine = createMachine({
       },
     },
   },
+  predictableActionArguments: true,
+});
+
+// =============================================================================
+
+const service = interpret(beanAppMachine).onTransition((state) => {
+  if (state.changed) console.log(`state 監視: ${state.value}`);
+});
+
+// Start the service
+service.start();
+
+// Send events
+// service.send({ type: Events.Upload });
+// service.send({ type: Events.UploadFailure });
+// service.send({ type: Events.Upload });
+
+// Stop the service when you are no longer using it.
+// service.stop();
+
+// ====================================================================
+import repl from 'repl';
+
+const replServer = repl.start({ prompt: 'custom-repl => ' });
+
+replServer.defineCommand('upload', function upload() {
+  service.send({ type: Events.Upload });
+});
+replServer.defineCommand('exit', function saybye() {
+  console.log('Goodbye!');
+  this.close();
 });
