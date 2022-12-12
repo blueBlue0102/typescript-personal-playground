@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import json2csv from 'json2csv';
+import crypto from 'crypto'
 
 // type Admin = {
 //   'LINE-NOTIFY': [
@@ -159,12 +160,13 @@ type HikingGuard = {
 const dataSource = path.join('data', 'hiking-guard-export.json');
 const hikingData = JSON.parse(fs.readFileSync(dataSource, { encoding: 'utf8' })) as HikingGuard;
 
-// 以身分證字號將 user 做集合
-// [{ ... }, { ... }, { ... }, ...] => [[{ ... }, { ... }, ...], [{ ... }, { ... }, ...], ...]
+function sha256(input:string):string{
+  return crypto.createHash('sha256').update(input).digest('hex');
+}
 
 /**
  * 輸出：
- * - 姓名
+ * - sha256(身分證字號)
  * - 生日
  * - 性別
  * - 行程代碼
@@ -197,7 +199,7 @@ for (const user in hikingData.USER) {
 
   // 輸出格式
   outputData.push({
-    使用者名稱: userData.climberName,
+    "使用者 ID": sha256(userData.climberId),
     年齡: age,
     性別: gender,
     行程代碼: userData.tripId,
