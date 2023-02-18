@@ -7,6 +7,7 @@ const queueName = 'qquueue';
 
 // consumer setting
 const consumerName = process.argv[2] || 'consumer';
+const prefetchAmount = Number(process.argv[3]) || 1;
 
 // create connection
 const connection = await amqp.connect([rabbitUrl]);
@@ -40,12 +41,12 @@ channel.consume(
       content: string;
       processSeconds: number;
     };
-    console.log(`${consumerName} receive: ${parsedMsg.content}`);
-    console.log(`Waiting Seconds: ${parsedMsg.processSeconds}`);
+    console.log(`- ${consumerName} receive: ${parsedMsg.content}`);
+    console.log(`--- Waiting Seconds: ${parsedMsg.processSeconds}`);
     setTimeout(() => {
-      console.log(`${parsedMsg.content} is finished.`);
+      console.log(`----- ${parsedMsg.content} is finished.`);
       channel.ack(msg);
     }, parsedMsg.processSeconds * 1000);
   },
-  { prefetch: 1, noAck: false },
+  { prefetch: prefetchAmount, noAck: false },
 );

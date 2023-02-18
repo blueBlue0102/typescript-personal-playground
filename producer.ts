@@ -7,9 +7,9 @@ const queueName = 'qquueue';
 
 // producer setting
 /** 要發送的內容 */
-const msgContent = process.argv[2];
+const msgContent = new Date().toLocaleTimeString();
 /** 這個內容要等幾秒後，consumer 才能 ack */
-const msgProcessSeconds = Number(process.argv[3]);
+const msgProcessSeconds = Number(process.argv[2]);
 const msg = {
   content: msgContent,
   processSeconds: msgProcessSeconds,
@@ -40,8 +40,6 @@ await channel.addSetup(() => {
 });
 
 // publish message to exchange
-await channel.publish(exchangeName, queueName, JSON.stringify(msg), {
-  // timeout: 10000,
-});
+await channel.publish(exchangeName, queueName, JSON.stringify(msg));
 
 connection.close();
