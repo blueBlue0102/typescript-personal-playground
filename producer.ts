@@ -33,7 +33,12 @@ await channel.addSetup(() => {
     // assert exchange
     channel.assertExchange(exchangeName, 'direct'),
     // assert queue
-    channel.assertQueue(queueName, { durable: true }),
+    channel.assertQueue(queueName, {
+      durable: true,
+      // arguments: {
+      //   'x-single-active-consumer': true,
+      // },
+    }),
     // bind exchange and queue
     channel.bindQueue(queueName, exchangeName, queueName),
   ]);
