@@ -93,6 +93,8 @@ function generateClassificationData(
     datasetId: string;
     categoryId: string;
   },
+  status: ClassificationDataStatusEnum = ClassificationDataStatusEnum.Confirmed,
+  isTrainingSet: boolean = null,
 ): ClassificationData[] {
   const output: ClassificationData[] = [];
   for (let i = 0; i < count; i++) {
@@ -100,17 +102,22 @@ function generateClassificationData(
       datasetId: { $oid: data.datasetId },
       content: crypto.randomUUID(),
       categoryId: { $oid: data.categoryId },
-      status: getNumberStatus(ClassificationDataStatusEnum.Confirmed),
+      status: getNumberStatus(status),
       score: null,
-      isTrainingSet: null,
+      isTrainingSet: isTrainingSet,
     });
   }
   return output;
 }
 
 exportJsonFile(
-  generateClassificationData(100, {
-    datasetId: '63f7046b922b48764fa5dee4',
-    categoryId: '640996a8f7207a023083ac00',
-  }),
+  generateClassificationData(
+    50,
+    {
+      datasetId: '63f7046b922b48764fa5dee4',
+      categoryId: '640996aff7207a023083ac02',
+    },
+    ClassificationDataStatusEnum.Trained,
+    false,
+  ),
 );
